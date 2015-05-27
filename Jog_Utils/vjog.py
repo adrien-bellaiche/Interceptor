@@ -1,8 +1,8 @@
 import time
 import math
 import sys
-
 from Jog_Utils import jog2d
+import pygame
 
 
 def simu(ns, shared_regs, change_regs):
@@ -16,7 +16,7 @@ def simu(ns, shared_regs, change_regs):
 
     tpict = []
     tpictply = []
-    pict1 = jog2d.picture(800, 50, 950, 200)
+    pict1 = jog2d.Picture(800, 50, 950, 200)
     tpict.append(pict1)
     tpictply.append(pict1.ply)
 
@@ -25,35 +25,35 @@ def simu(ns, shared_regs, change_regs):
 
     maze = True
     if maze:
-        obs1 = jog2d.obstacle(240, 20, 260, 450)
+        obs1 = jog2d.Obstacle(240, 20, 260, 450)
         tobs.append(obs1)
         tobsply.append(obs1.ply)
 
-        obs2 = jog2d.obstacle(490, 150, 510, 580)
+        obs2 = jog2d.Obstacle(490, 150, 510, 580)
         tobs.append(obs2)
         tobsply.append(obs2.ply)
 
-        obs3 = jog2d.obstacle(740, 20, 760, 450)
+        obs3 = jog2d.Obstacle(740, 20, 760, 450)
         tobs.append(obs3)
         tobsply.append(obs3.ply)
 
-    obs_l = jog2d.obstacle(0, 0, 10, ymax)
+    obs_l = jog2d.Obstacle(0, 0, 10, ymax)
     tobs.append(obs_l)
     tobsply.append(obs_l.ply)
 
-    obs_r = jog2d.obstacle(xmax - 10, 0, xmax, ymax)
+    obs_r = jog2d.Obstacle(xmax - 10, 0, xmax, ymax)
     tobs.append(obs_r)
     tobsply.append(obs_r.ply)
 
-    obs_t = jog2d.obstacle(11, 0, xmax - 11, 10)
+    obs_t = jog2d.Obstacle(11, 0, xmax - 11, 10)
     tobs.append(obs_t)
     tobsply.append(obs_t.ply)
 
-    obs_b = jog2d.obstacle(11, ymax - 10, xmax - 11, ymax)
+    obs_b = jog2d.Obstacle(11, ymax - 10, xmax - 11, ymax)
     tobs.append(obs_b)
     tobsply.append(obs_b.ply)
 
-    jog = jog2d.jog2d()
+    jog = jog2d.Jog2d()
     leds = [0, 0, 0, 0]  # leds off
 
     # init location

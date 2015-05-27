@@ -28,7 +28,7 @@ vDevFilesPath = {'init': False, 'setup': 0, 'conversion': 0, 'averaging': 0,
 
 
 # getting informations on computer
-def getPlatformInfo():
+def get_platform_info():
     nbits, binary = platform.architecture()
     machine = platform.machine()
     name = platform.node()
@@ -38,11 +38,11 @@ def getPlatformInfo():
 
 
 # running on JOG ? or on vJOG ?
-def checkRunningOnJog():
+def check_running_onjog():
     global robotPlatform
     if robotPlatform == "":
         robotPlatform = "vJOG"
-        infos = getPlatformInfo()
+        infos = get_platform_info()
         print infos
         if (infos['nbits'] == '32bit') and (infos['machine'] == 'armv5tejl'):
             robotPlatform = "JOG"
@@ -57,18 +57,20 @@ def checkRunningOnJog():
             changeRegs = manager.list()
             for i in (4, 6, 8, 0xa, 0xc, 0xe, 0x18, 0x20, 0x22):  # init FPGA regs
                 st_reg = "fpga_0x%2.2x" % i
-                reg_val = 0
-                sharedRegs[st_reg] = reg_val
-
+                #reg_val = 0
+                #sharedRegs[st_reg] = reg_val
+                sharedRegs[st_reg] = 0
             # init I2C regs
             for i in range(4):
                 st_reg = "fpga_0x60_%2.2x" % i
-                sharedRegs[st_reg] = reg_val
+                #sharedRegs[st_reg] = reg_val
+                sharedRegs[st_reg] = 0
             i2caddr = 7 * 16 + 1
             for a in range(5):
                 for i in range(4):
                     st_reg = "fpga_0x%2.2x_%2.2x" % (i2caddr + a, i)
-                    sharedRegs[st_reg] = reg_val
+                    #sharedRegs[st_reg] = reg_val
+                    sharedRegs[st_reg] = 0
 
             for key in vDevFilesPath.keys():  # ADC device files
                 st_reg = "dev_%s" % key
@@ -95,10 +97,10 @@ def checkRunningOnJog():
 #    addr : address of the register relatively to the beginning 
 #           FPGA address on ARMADEUS (Oxb6000000)
 #           addr can be seen as register number  
-def jogFpgaRead(addr):
+def jog_fpga_read(addr):
     f = os.open("/dev/mem", os.O_RDONLY | os.O_SYNC)  # open memory device
     mem = mmap.mmap(f, 8192, mmap.MAP_SHARED,  # map register at
-                    mmap.PROT_READ, 0, 0xd6000000)  #  0xd6000000 address
+                    mmap.PROT_READ, 0, 0xd6000000)  # 0xd6000000 address
     mem.seek(addr)  # moving to register address
     vl = ord(mem.read_byte())  # reading one char and casting to byte
     mem.seek(addr + 1)  # moving to register address
@@ -112,7 +114,7 @@ def jogFpgaRead(addr):
 # write a value (byte) in a register, returning nothing
 #    addr : address of the register
 #    v : 8 bits value (byte) to write in the register 
-def jogFpgaWrite(addr, v):
+def jog_fpga_write(addr, v):
     f = os.open("/dev/mem", os.O_RDWR)  # open memory device
     mem = mmap.mmap(f, 8192, mmap.MAP_SHARED,  # and ap it
                     mmap.PROT_READ | mmap.PROT_WRITE, 0, 0xd6000000)
@@ -125,13 +127,13 @@ def jogFpgaWrite(addr, v):
 
 
 # emulating access to FPGA registers on VJOG
-def vjogFpgaRead(addr):
+def vjog_fpga_read(addr):
     global ns, sharedRegs, changeRegs
     st_reg = "fpga_0x%2.2x" % addr
     return sharedRegs[st_reg]
 
 
-def vjogFpgaWrite(addr, v):
+def vjog_fpga_write(addr, v):
     global ns, sharedRegs, changeRegs
     st_reg = "fpga_0x%2.2x" % addr
     changeRegs.append((st_reg, v))
@@ -143,7 +145,7 @@ def vjogFpgaWrite(addr, v):
 # i2c stuff 
 
 # defining structure of i2C messages
-class i2c_msg(ctypes.Structure):
+class I2cMsg(ctypes.Structure):
     """<linux/i2c-dev.h> struct i2c_msg"""
 
     _fields_ = [
@@ -166,10 +168,10 @@ I2C_M_RECV_LEN = 0x0400  # length will be first received byte
 
 
 # /usr/include/linux/i2c-dev.h: 155
-class i2c_rdwr_ioctl_data(ctypes.Structure):
+class I2cRdwrIoctlData(ctypes.Structure):
     """<linux/i2c-dev.h> struct i2c_rdwr_ioctl_data"""
     _fields_ = [
-        ('msgs', ctypes.POINTER(i2c_msg)),
+        ('msgs', ctypes.POINTER(I2cMsg)),
         ('nmsgs', ctypes.c_int)]
 
     __slots__ = [name for name, type in _fields_]
@@ -195,7 +197,7 @@ I2C_RDWR = 0x0707  # Combined R/W transfer (one stop only)
 # translate msg to ioctl input
 def i2c_ioctl_msg(*msgs):
     msg_count = len(msgs)
-    msg_array = (i2c_msg * msg_count)(*msgs)
+    msg_array = (I2cMsg * msg_count)(*msgs)
     return msg_array, msg_count
 
 
@@ -203,7 +205,7 @@ def i2c_ioctl_msg(*msgs):
 #    addr : address on the i2c bus
 #    register : register number 
 #    i2cDebug : displaying debug messages if true (not used yet)
-def jogI2cRead(addr, register, debug):
+def jog_i2c_read(addr, register, debug):
     import fcntl
     import posix
 
@@ -213,14 +215,14 @@ def jogI2cRead(addr, register, debug):
     flags = I2C_M_WR
     buf = ctypes.create_string_buffer(1)
     buf[0] = chr(register)
-    msgs = i2c_msg(addr=addr, flags=flags, len=ctypes.sizeof(buf), buf=buf)
+    msgs = I2cMsg(addr=addr, flags=flags, len=ctypes.sizeof(buf), buf=buf)
     msg_array, msg_count = i2c_ioctl_msg(msgs)
-    io_i2c = i2c_rdwr_ioctl_data(msgs=msg_array, nmsgs=msg_count)
+    io_i2c = I2cRdwrIoctlData(msgs=msg_array, nmsgs=msg_count)
     i2c_stat = fcntl.ioctl(f_i2c, I2C_RDWR, io_i2c)
 
     msgs.flags = I2C_M_RD
     msg_array, msg_count = i2c_ioctl_msg(msgs)
-    io_i2c = i2c_rdwr_ioctl_data(msgs=msg_array, nmsgs=msg_count)
+    io_i2c = I2cRdwrIoctlData(msgs=msg_array, nmsgs=msg_count)
     i2c_stat = fcntl.ioctl(f_i2c, I2C_RDWR, io_i2c)
 
     posix.close(f_i2c)
@@ -232,7 +234,7 @@ def jogI2cRead(addr, register, debug):
 #    register : register number
 #    value : byte value to write  
 #    debug : displaying debug messages if true (not used yet)
-def jogI2cWrite(addr, register, value, debug):
+def jog_i2c_write(addr, register, value, debug):
     import fcntl
     import posix
 
@@ -243,9 +245,9 @@ def jogI2cWrite(addr, register, value, debug):
     buf = ctypes.create_string_buffer(2)
     buf[0] = chr(register)
     buf[1] = chr(value)
-    msgs = i2c_msg(addr=addr, flags=flags, len=ctypes.sizeof(buf), buf=buf)
+    msgs = I2cMsg(addr=addr, flags=flags, len=ctypes.sizeof(buf), buf=buf)
     msg_array, msg_count = i2c_ioctl_msg(msgs)
-    io_i2c = i2c_rdwr_ioctl_data(msgs=msg_array, nmsgs=msg_count)
+    io_i2c = I2cRdwrIoctlData(msgs=msg_array, nmsgs=msg_count)
     i2c_stat = fcntl.ioctl(f_i2c, I2C_RDWR, io_i2c)
 
     posix.close(f_i2c)
@@ -257,7 +259,7 @@ def jogI2cWrite(addr, register, value, debug):
 #    addr : address on the i2c bus
 #    register : register number 
 #    i2cDebug : displaying debug messages if true (not used yet)
-def vjogI2cRead(addr, register, debug):
+def vjog_i2c_read(addr, register, debug):
     global ns, sharedRegs, changeRegs
     st_reg = "i2c_0x%2.2x_%2.2d" % (addr, register)
     v = sharedRegs[st_reg]
@@ -266,15 +268,15 @@ def vjogI2cRead(addr, register, debug):
 
 
 # check is useless now, as vjog initializes the shared registers
-def vjogI2cReadCheck(addr, register, debug):
+def vjog_i2c_read_check(addr, register, debug):
     global ns, sharedRegs, changeRegs
     st_reg = "i2c_0x%2.2x_%2.2d" % (addr, register)
     try:
         v = sharedRegs[st_reg]
-        print __name__, ",", vjogI2cRead.__name__, ",", st_reg, ",", v
+        print __name__, ",", vjog_i2c_read.__name__, ",", st_reg, ",", v
     except Exception:
         v = 0
-        vjogI2cWrite(addr, register, v, debug)
+        vjog_i2c_write(addr, register, v, debug)
     return v
 
 
@@ -283,7 +285,7 @@ def vjogI2cReadCheck(addr, register, debug):
 #    register : register number
 #    value : byte value to write  
 #    debug : displaying debug messages if true (not used yet)
-def vjogI2cWrite(addr, register, value, debug):
+def vjog_i2c_write(addr, register, value, debug):
     global ns, sharedRegs, changeRegs
     st_reg = "i2c_0x%2.2x_%2.2d" % (addr, register)
     changeRegs.append((st_reg, value))
@@ -304,7 +306,7 @@ def vjogI2cWrite(addr, register, value, debug):
 # on virtual JOG
 
 # jogDeviceInit
-def jogDeviceInit():
+def jog_device_init():
     # check if driver module for MAX1027 ADC is loaded
     print "check if driver module for MAX1027 ADC is loaded"
     try:
@@ -316,18 +318,18 @@ def jogDeviceInit():
 
 
 # vjogDeviceInit
-def vjogDeviceInit():
+def vjog_device_init():
     global ns, sharedRegs, changeRegs
-    devFileTag = 'init'
-    st_reg = "dev_%s" % devFileTag
+    dev_file_tag = 'init'
+    st_reg = "dev_%s" % dev_file_tag
     sharedRegs[st_reg] = True
     changeRegs.append((st_reg, True))
 
 
 # jogDeviceRead
-def jogDeviceRead(devFile):
+def jog_device_read(dev_file):
     #print "read ",devFile
-    f = open(devFile, "r")
+    f = open(dev_file, "r")
     v = f.read()
     if v[0:2] == "0x":
         v = int(v, 16)
@@ -338,7 +340,7 @@ def jogDeviceRead(devFile):
 
 
 # vjogDeviceRead
-def vjogDeviceRead(dev_file):
+def vjog_device_read(dev_file):
     global ns, sharedRegs, changeRegs
     s = dev_file.split('/')
     dev_file_tag = s[len(s) - 1]
@@ -347,14 +349,14 @@ def vjogDeviceRead(dev_file):
 
 
 # jogDeviceWrite
-def jogDeviceWrite(dev_file, v):
+def jog_device_write(dev_file, v):
     f = open(dev_file, "w")
     f.write(str(v))
     f.close()
 
 
 # vjogDeviceWrite
-def vjogDeviceWrite(dev_file, v):
+def vjog_device_write(dev_file, v):
     global ns, sharedRegs, changeRegs
     s = dev_file.split('/')
     dev_file_tag = s[len(s) - 1]
@@ -365,15 +367,14 @@ def vjogDeviceWrite(dev_file, v):
 
 
 # full stop JOG 
-def jogFullStop():
-    jogFpgaWrite(0x18, 0)  # reset FPGA
+def jog_full_stop():
+    jog_fpga_write(0x18, 0)  # reset FPGA
 
 
-def vjogFullStop():
+def vjog_full_stop():
     global ns
     ns.alive = False
     #print ns
     #print sharedRegs
     #print changeRegs
     simuProc.join()
-

@@ -40,7 +40,7 @@ def sonar_beam(x, y, theta, head, rng):
     return ply
 
 
-class jog2d(object):
+class Jog2d(object):
     def __init__(self):
         self.nel = 0
         self.tel = {}
@@ -177,8 +177,8 @@ class jog2d(object):
         nm = 'mainGap'
         drawok[nm] = True
         ply = self.tel[nm]['poly']
-        # pygame.draw.polygon(screen, (255, 192, 127), ply.P, 0)
-        # pygame.draw.polygon(screen, (127, 95, 63), ply.P, 1)
+        pygame.draw.polygon(screen, (255, 192, 127), ply.P, 0)
+        pygame.draw.polygon(screen, (127, 95, 63), ply.P, 1)
 
         nm = 'main'
         drawok[nm] = True
@@ -265,7 +265,7 @@ class jog2d(object):
         return stopped
 
 
-class obstacle(object):
+class Obstacle(object):
     def __init__(self, x0, y0, x1, y1):
         ply = pylygon.Polygon([(x0, y0), (x1, y0), (x1, y1), (x0, y1)])
         self.ply = ply
@@ -275,7 +275,7 @@ class obstacle(object):
         pygame.draw.polygon(screen, outcolor, self.ply, 1)
 
 
-class picture(object):
+class Picture(object):
     def __init__(self, x0, y0, x1, y1):
         ply = pylygon.Polygon([(x0, y0), (x1, y0), (x1, y1), (x0, y1)])
         self.ply = ply
@@ -286,7 +286,7 @@ class picture(object):
 
 
 if __name__ == "__main__":
-    a = jog2d()
+    a = Jog2d()
     print a.tel['main']
     a.translate(-20.0, 50.0)
     print a.tel['main']

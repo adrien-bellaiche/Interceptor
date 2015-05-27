@@ -14,7 +14,7 @@ from Jog_Utils import jogio_utils
 from Jog_Utils.jogio_utils import *  # low level IO controls
 
 
-def fpgaRead(addr):
+def fpga_read(addr):
     """
     read and return FPGA register content (one byte)
     input:
@@ -23,15 +23,15 @@ def fpgaRead(addr):
     output:
         v : register content
     """
-    checkRunningOnJog()
+    check_running_onjog()
     if jogio_utils.robotPlatform == "JOG":
-        v = jogFpgaRead(addr)
+        v = jog_fpga_read(addr)
     else:
-        v = vjogFpgaRead(addr)
+        v = vjog_fpga_read(addr)
     return v
 
 
-def fpgaWrite(addr, v):
+def fpga_write(addr, v):
     """
     write a value (byte) in a FPGA register, returning nothing
     input:
@@ -39,14 +39,14 @@ def fpgaWrite(addr, v):
                FPGA memory address
         v :  8 bits value (byte) to write in the register 
     """
-    checkRunningOnJog()
+    check_running_onjog()
     if jogio_utils.robotPlatform == "JOG":
-        jogFpgaWrite(addr, v)
+        jog_fpga_write(addr, v)
     else:
-        vjogFpgaWrite(addr, v)
+        vjog_fpga_write(addr, v)
 
 
-def i2cRead(addr, register, debug=False):
+def i2c_read(addr, register, debug=False):
     """
     read value from a register at a given i2c address and return a byte
     input:
@@ -56,15 +56,15 @@ def i2cRead(addr, register, debug=False):
     output:
          v : register content
     """
-    checkRunningOnJog()
+    check_running_onjog()
     if jogio_utils.robotPlatform == "JOG":
-        v = jogI2cRead(addr, register, debug)
+        v = jog_i2c_read(addr, register, debug)
     else:
-        v = vjogI2cRead(addr, register, debug)
+        v = vjog_i2c_read(addr, register, debug)
     return v
 
 
-def i2cWrite(addr, register, value, debug=False):
+def i2c_write(addr, register, value, debug=False):
     """
     write a byte value in a register at a given i2c address, nothing returned
     input: 
@@ -73,14 +73,14 @@ def i2cWrite(addr, register, value, debug=False):
          value : byte value to write in register
          debug : displaying debug messages if True (not used yet)
     """
-    checkRunningOnJog()
+    check_running_onjog()
     if jogio_utils.robotPlatform == "JOG":
-        jogI2cWrite(addr, register, value, debug)
+        jog_i2c_write(addr, register, value, debug)
     else:
-        vjogI2cWrite(addr, register, value, debug)
+        vjog_i2c_write(addr, register, value, debug)
 
 
-def deviceInit():
+def device_init():
     """
     Initializing ADC linux device driver (no parameters)
     ADC and temperature uses device files created when the driver module 
@@ -91,14 +91,14 @@ def deviceInit():
     On virtual JOG, ADC is not implemented yet ...
     """
     print "init ADC on " + jogio_utils.robotPlatform
-    checkRunningOnJog()
+    check_running_onjog()
     if jogio_utils.robotPlatform == "JOG":
-        v = jogDeviceInit()
+        jog_device_init()
     else:
-        v = vjogDeviceInit()
+        vjog_device_init()
 
 
-def deviceRead(devFile):
+def device_read(dev_file):
     """
     reading value v on device file devFile
     input:
@@ -107,15 +107,15 @@ def deviceRead(devFile):
        v : short integer value (16 bits)
     not implemented yet on vJOG
     """
-    checkRunningOnJog()
+    check_running_onjog()
     if jogio_utils.robotPlatform == "JOG":
-        v = jogDeviceRead(devFile)
+        v = jog_device_read(dev_file)
     else:
-        v = vjogDeviceRead(devFile)
+        v = vjog_device_read(dev_file)
     return v
 
 
-def deviceWrite(devFile, v):
+def device_write(dev_file, v):
     """
     writing value v on device file devFile, returning nothing
     input:
@@ -124,19 +124,19 @@ def deviceWrite(devFile, v):
        v : short integer value (16 bits)
     not implemented yet on vJOG
     """
-    checkRunningOnJog()
+    check_running_onjog()
     if jogio_utils.robotPlatform == "JOG":
-        jogDeviceWrite(devFile, v)
+        jog_device_write(dev_file, v)
     else:
-        vjogDeviceWrite(devFile, v)
+        vjog_device_write(dev_file, v)
 
 
-def fullStop():
+def full_stop():
     """
     full stop JOG (or vJOG), returning nothing
     """
-    checkRunningOnJog()
+    check_running_onjog()
     if jogio_utils.robotPlatform == "JOG":
-        jogFullStop()
+        jog_full_stop()
     else:
-        vjogFullStop()
+        vjog_full_stop()
