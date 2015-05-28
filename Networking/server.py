@@ -11,8 +11,8 @@ mysock.bind((server, port))
 INTERCEPTION_RANGE = 	2.
 MISSION_FINISHED =	False
 
-JOG_IP = 		[None]*10
-JOG_coordinates= 	[None]*10
+JOG_IP = 		[None]*5
+JOG_coordinates= 	[None]*5
 ennemy_coordinates = 	[0.0,0.0]
 ennemy_velocity = 	[0.0,0.0]
 
@@ -41,13 +41,13 @@ while True :
 	if MISSION_FINISHED :
 		for e in JOG_IP :
 			mysock.sendto('F',e)
-	if msg & not(MISSION_FINISHED) :
+	if not MISSION_FINISHED :
 		msg_parts = msg.split()
-		JOG_IP[msg_parts[0]] = client
+		JOG_IP[int(msg_parts[0])] = client
 		if msg_parts[1] == 'C' :	# cas où le message reçu est une mise à jour de la position
 			JOG_X = 			float(msg_parts[2])
 			JOG_Y = 			float(msg_parts[3])
-			JOG_coordinates[msg_parts[0]] =	[JOG_X, JOG_Y]
+			JOG_coordinates[int(msg_parts[0])] =	[JOG_X, JOG_Y]
 			# vérification de la distance à l'ennemi
 			if ( math.sqrt( (JOG_X-ennemy_coordinates[0])**2 + (JOG_Y-ennemy_coordinates[1])**2 ) <= INTERCEPTION_RANGE ) :
 				MISSION_FINISHED = True
