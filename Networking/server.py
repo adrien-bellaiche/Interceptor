@@ -18,7 +18,7 @@ ennemy_velocity = 	[0.0,0.0]
 
 # ne peut être appelée qu'à condition que tous les tableaux soient remplis
 def update_coordinates() :
-	global JOG_IP, JOG_coordinates, ennemy_coordinates
+	global JOG_IP, JOG_coordinates, ennemy_coordinates, ennemy_velocity
 	for e in JOG_IP :
 		# détermination des deux plus proches voisins
 		JOG_ID = 		JOG_IP.index(e)
@@ -33,7 +33,7 @@ def update_coordinates() :
 		neighbour2_ID = distances.index(min(distances))
 		
 		# formatage et envoi du message
-		msg_coordinates = 'C'+' '+'A'+str(JOG_coordinates[neighbour1_ID][0])+' '+'A'+str(JOG_coordinates[neighbour1_ID][1])+' '+'B'+str(JOG_coordinates[neighbour2_ID][0])+' '+'B'+str(JOG_coordinates[neighbour1_ID][1])+' '+'T'+str(ennemy_coordinates[0])+' T'+str(ennemy_coordinates[1])+' '+'V'+str(ennemy_velocity[1])+' V'+str(ennemy_velocity[1])
+		msg_coordinates = 'C'+' '+'A'+str(JOG_coordinates[neighbour1_ID][0])+' '+'A'+str(JOG_coordinates[neighbour1_ID][1])+' '+'B'+str(JOG_coordinates[neighbour2_ID][0])+' '+'B'+str(JOG_coordinates[neighbour1_ID][1])+' '+'T'+str(ennemy_coordinates[0])+' '+'T'+str(ennemy_coordinates[1])+' '+'V'+str(ennemy_velocity[1])+' '+'V'+str(ennemy_velocity[1])
 		mysock.sendto(msg_coordinates, e)
 
 while True :
