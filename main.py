@@ -3,6 +3,7 @@ __author__ = 'Fenix'
 from twisted.internet import task
 from twisted.internet import reactor
 from JogAsservissement import Jog
+from Jog_Utils.jogio import *
 from Utils import *
 import socket
 
@@ -10,23 +11,23 @@ ERROR_ALLGOOD = 0
 ERROR_STUCK = 1
 ERROR_MSG_FAILED = 2
 
+DT = 0.2
+
 x, y, selfid, serverIP, serverPort = parse_mission_file('mission.conf')
-robot = Jog(x, y, id)
+robot = Jog(x, y, selfid, DT)
 asservissement = task.LoopingCall(robot.asservissement)
 mysock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-server = "192.168.2.1"  # TODO
-port = 55050  # TODO
-# TODO : inserer le serveur dans une ligne du fichier texte ? ATTENTION : Code actuel utilise uniquemetn fichier texte.
 started = False
 
 #msgin, rserver = mysock.recvfrom(255)
 
 
 def main():
+    device_init()
     reactor.run()
     while not started:
         retrieve_data()
-    asservissement.start(0.3)  # call every 0.3s
+    asservissement.start(DT)  # call every 0.3s
     while started:
         retrieve_data()
     asservissement.stop()  # will stop the looping calls
@@ -61,10 +62,12 @@ def retrieve_data():
             e_codes[4], target[0] = parse_position(msg[5])
         if msg[6][0] != 'T' and e_codes[4] == 0:
             e_codes[5], target[1] = parse_position(msg[6])
-        if msg[7][0] != 'V':
+        if msg[7][0] != 'V' and e_codes[5] == 0:
             e_codes[6], target[2] = parse_position(msg[7])
         if msg[8][0] != 'V' and e_codes[6] == 0:
             e_codes[7], target[3] = parse_position(msg[8])
+        if e_codes[6] == 0:
+            robot.update_target(target)
     elif msg[0] == "S":
         started = True
     elif msg[0] == "F":
@@ -72,7 +75,7 @@ def retrieve_data():
 
 
 def send_coords():
-    msg = [robot.id, 'C', robot.state[0], robot.state[1]]
+    msg = [robot.id, 'C', robot.position[0], robot.position[1]]
     mysock.sendto(" ".join(msg), (serverIP, serverPort))
 
 

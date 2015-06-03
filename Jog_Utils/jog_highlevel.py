@@ -1,6 +1,6 @@
 from Jog_Utils.jogio import *
 from Jog_Utils.jogio_cmd_motors import *
-from math import copysign
+from math import copysign, pi
 
 
 # leds, set and get
@@ -198,6 +198,7 @@ def set_heading(head):
     head_ok = False
     err_max = 0.5
     while not head_ok:
+        print "turning ", get_odometry()
         head_mes = compass_highres()
         head_err = ((head_mes - head + 180) % 360) - 180
         side = copysign(1, head_err)
@@ -216,21 +217,26 @@ def go_line_heading(head, speed, duration):
     initime = time.time()
     motors_set_direction(1, 1)
     while (time.time() - initime) < duration:
+        print "ahead ", get_odometry()
         head_mes = compass_highres()
         head_err = ((head_mes - head + 180) % 360) - 180
         print "Forwarding towards ", head_mes, " speeds : ", head, "error of ", head_err
-        motors_set_speed(speed * (1 - head_err / 90), speed * (1 + head_err / 90))
+        p = [speed * (1 - head_err / 20), speed * (1 + head_err / 20)]
+        print "Orders : ", p
+        motors_set_speed(p[0], p[1])
         time.sleep(0.01)
     motors_set_speed(0, 0)
 
 
+def get_odometry():
+    return [fpga_read(0x22), fpga_read(0x20)]
+
+
 def get_theta():
-    #TODO
-    return 0
+    mag_ori = compass_highres()
+    return mag_ori*2*pi/360
 
-#
 # unitary tests of JOG's sensors and actuators
-
 
 if __name__ == "__main__":
     device_init()

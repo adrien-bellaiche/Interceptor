@@ -57,20 +57,17 @@ def check_running_onjog():
             changeRegs = manager.list()
             for i in (4, 6, 8, 0xa, 0xc, 0xe, 0x18, 0x20, 0x22):  # init FPGA regs
                 st_reg = "fpga_0x%2.2x" % i
-                #reg_val = 0
-                #sharedRegs[st_reg] = reg_val
-                sharedRegs[st_reg] = 0
+                reg_val = 0
+                sharedRegs[st_reg] = reg_val
             # init I2C regs
             for i in range(4):
                 st_reg = "fpga_0x60_%2.2x" % i
-                #sharedRegs[st_reg] = reg_val
-                sharedRegs[st_reg] = 0
+                sharedRegs[st_reg] = reg_val
             i2caddr = 7 * 16 + 1
             for a in range(5):
                 for i in range(4):
                     st_reg = "fpga_0x%2.2x_%2.2x" % (i2caddr + a, i)
-                    #sharedRegs[st_reg] = reg_val
-                    sharedRegs[st_reg] = 0
+                    sharedRegs[st_reg] = reg_val
 
             for key in vDevFilesPath.keys():  # ADC device files
                 st_reg = "dev_%s" % key
@@ -80,8 +77,7 @@ def check_running_onjog():
 
             ns.alive = True
             ns.endOfInit = False
-            simuProc = Process(target=vjog.simu,
-                               args=(ns, sharedRegs, changeRegs,))
+            simuProc = Process(target=vjog.simu, args=(ns, sharedRegs, changeRegs,))
             simuProc.start()
             while not ns.endOfInit:
                 print "wait for vJOG's init ..."

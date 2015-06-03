@@ -23,7 +23,7 @@ def simu(ns, shared_regs, change_regs):
     tobs = []
     tobsply = []
 
-    maze = True
+    maze = False
     if maze:
         obs1 = jog2d.Obstacle(240, 20, 260, 450)
         tobs.append(obs1)
