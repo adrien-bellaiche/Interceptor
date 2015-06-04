@@ -40,10 +40,15 @@ class Jog():
         self.I_error_theta = 0
         self.motor_curr_direction = [1, 1]
         self.motor_curr_direction_order = [1, 1]
-        p = open("logasserv.txt", "w")
-        p.write("")
-        p.close()
-        p = open("log_theta.txt", "w")
+        self.init_logs()
+
+    def init_logs(self):
+        self.init_log("logasserv.txt")
+        self.init_log("logtheta.txt")
+        self.init_log("logpos.txt")
+
+    def init_log(self, filename):
+        p = open(filename, "w")
         p.write("")
         p.close()
 
@@ -74,7 +79,7 @@ class Jog():
             # Détermination de la direction à prendre
             targ_dir = self.test_dir()
             #targ_dir = self.determine_dir()
-            with open("log_theta.txt", "a") as logfile:
+            with open("logtheta.txt", "a") as logfile:
                 logfile.write(" ".join([str(time.time()), str(atan2(targ_dir[1], targ_dir[0])), str(self.theta)]))
                 logfile.write("\n")
             # targ_dir = self.determine_dir()  # décommenter si non test.
@@ -83,11 +88,9 @@ class Jog():
             self.I_error_theta += delta_ori
             d_theta = self.theta - last_theta
             if abs(delta_ori) > pi / 6:  # Requiert de tourner avant de commencer à avancer
-                print "REQUEST TURN"
                 p = [ Jog.NORMAL_SPEED * (Jog.KP_ORI*delta_ori - Jog.KD_ORI*d_theta),
                      -Jog.NORMAL_SPEED * (Jog.KP_ORI*delta_ori + Jog.KD_ORI*d_theta)]
             else:  # Assez bien orienté vers la destination pour aller "droit"
-                print "REQUEST CURVEMOVE"
                 p = [Jog.NORMAL_SPEED * (1 + Jog.KP_ORI*delta_ori - Jog.KD_ORI*d_theta + Jog.KI_ORI*self.I_error_theta),
                      Jog.NORMAL_SPEED * (1 - Jog.KP_ORI*delta_ori + Jog.KD_ORI*d_theta - Jog.KI_ORI*self.I_error_theta)]
         else:
@@ -124,6 +127,9 @@ class Jog():
         self.motor_speeds = wheels_speed
         self.odos = new_odos
         self.theta = theta
+        with open("logpos.txt", "a") as logfile:
+            logfile.write(" ".join([str(self.position[0]), str(self.position[1])]))
+            logfile.write("\n")
 
     # Method working. May need some refinement.
     def compute_wheel_direction_state_based(self, wheels_speed):
@@ -160,7 +166,6 @@ class Jog():
         else:
             print "RIGHT WHEEL FRONTWARD"
         return wheels_speed
-
 
     def determine_dir(self):
         v2center = self.vect_to_target(self.position)
