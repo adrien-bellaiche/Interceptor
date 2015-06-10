@@ -1,5 +1,4 @@
 __author__ = 'Fenix'
 
-
-st_reg = "fpga_0x%2.2x" % 0x22
-print 2 % 2
+p = ["hello1", "hello2", "hello3", "hello4", "hello5", "hello6"]
+print p[0:-1:1]

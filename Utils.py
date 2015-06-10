@@ -35,6 +35,12 @@ def parse_position(word):
         return [0, float(word[1:])]
 
 
+def make_mission_file(desc):  # TODO : test
+    with open("mission.conf", "w") as mission_file:
+        descs = [_.replace(" ", "") for _ in desc.split(',')]
+        for desci in descs:
+            mission_file.write("".join([desci, "\n"]))
+
 class ParseException(Exception):
     def __init__(self, word):
         self.value = word

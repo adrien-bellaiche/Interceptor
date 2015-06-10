@@ -1,7 +1,5 @@
 # coding=utf-8
 __author__ = 'Fenix'
-from twisted.internet import task
-from twisted.internet import reactor
 from JogAsservissement import Jog
 from Jog_Utils.jogio import *
 from Utils import *
@@ -15,7 +13,6 @@ DT = 0.2
 
 x, y, selfid, serverIP, serverPort = parse_mission_file('mission.conf')
 robot = Jog(x, y, selfid, DT)
-asservissement = task.LoopingCall(robot.asservissement)
 mysock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 started = False
 
@@ -24,13 +21,11 @@ started = False
 
 def main():
     device_init()
-    reactor.run()
+    robot.asservissement()
     while not started:
         retrieve_data()
-    asservissement.start(DT)  # call every 0.3s
     while started:
         retrieve_data()
-    asservissement.stop()  # will stop the looping calls
 
 
 def retrieve_data():

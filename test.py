@@ -13,5 +13,5 @@ if __name__ == "__main__":
     x, y, selfid, serverIP, serverPort = parse_mission_file('mission.conf')
     robot = Jog(x, y, selfid, DT)
     robot.update_target([0.5, 0.5, 0, 0])
-    robot.asservissement()
+    robot.start()
     time.sleep(100)

@@ -10,7 +10,7 @@ from Jog_Utils.jogio_cmd_motors import *
 from math import atan2
 
 
-# Frame : +Y is North, +X is East.
+# Frame : +Y is East, +X is North.
 class Jog():
     MAX_WHEEL_SPEED = 0.6  # m/s
     SAFETY_MARGIN = 2  # m
@@ -41,6 +41,11 @@ class Jog():
         self.motor_curr_direction = [1, 1]
         self.motor_curr_direction_order = [1, 1]
         self.init_logs()
+        self.started = False
+
+    def start(self):
+        self.started = True
+        self.asservissement()
 
     def init_logs(self):
         self.init_log("logasserv.txt")
@@ -59,9 +64,10 @@ class Jog():
         self.target = np.array(v)
 
     def asservissement(self):
-        t = threading.Timer(self.dt, self.asservissement)
-        t.daemon = True
-        t.start()
+        if self.started:
+            t = threading.Timer(self.dt, self.asservissement)
+            t.daemon = True
+            t.start()
         initime = time.clock()  # Comment after debugging
         last_theta = self.theta
         # Update state
