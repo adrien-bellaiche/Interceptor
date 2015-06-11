@@ -48,7 +48,7 @@ while True :
 				for e in JOG_IP :
 					mysock.sendto('S',e)
 				MISSION_STARTED = True
-		if MISSION_STARTED :
+		else :
 			msg_parts = msg.split()
 			if msg_parts[0] != '42' :		# verifier si le JOG n'est pas l'ennemi
 				JOG_IP[int(msg_parts[0])] = client
