@@ -43,22 +43,26 @@ while True :
 		for e in JOG_IP :
 			mysock.sendto('F',e)
 	if not MISSION_FINISHED :
+		if not MISSION_STARTED :
+			if not (None in JOG_IP) :
+				for e in JOG_IP :
+					mysock.sendto('S',e)
+				MISSION_STARTED = True
 		if MISSION_STARTED :
 			msg_parts = msg.split()
-			JOG_IP[int(msg_parts[0])] = client
-			if msg_parts[1] == 'C' :	# cas où le message reçu est une mise à jour de la position
-				JOG_X = 			float(msg_parts[2])
-				JOG_Y = 			float(msg_parts[3])
-				JOG_coordinates[int(msg_parts[0])] =	[JOG_X, JOG_Y]
-				# vérification de la distance à l'ennemi
-				if ( math.sqrt( (JOG_X-ennemy_coordinates[0])**2 + (JOG_Y-ennemy_coordinates[1])**2 ) <= INTERCEPTION_RANGE ) :
-					MISSION_FINISHED = True
-		if not MISSION_STARTED :
-			for e in JOG_IP :
-				mysock.sendto('S',e)
-			MISSION_STARTED = True
-		elif msg_parts[1] == 'E' :	# cas où le message reçu est une erreur
-			print "ERROR : " + msg
-			pass
+			if msg_parts[0] != '42' :		# verifier si le JOG n'est pas l'ennemi
+				JOG_IP[int(msg_parts[0])] = client
+				if msg_parts[1] == 'C' :	# cas où le message reçu est une mise à jour de la position
+					JOG_X = 			float(msg_parts[2])
+					JOG_Y = 			float(msg_parts[3])
+					JOG_coordinates[int(msg_parts[0])] =	[JOG_X, JOG_Y]
+					# vérification de la distance à l'ennemi
+					if ( math.sqrt( (JOG_X-ennemy_coordinates[0])**2 + (JOG_Y-ennemy_coordinates[1])**2 ) <= INTERCEPTION_RANGE ) :
+						MISSION_FINISHED = True
+				elif msg_parts[1] == 'E' :	# cas où le message reçu est une erreur
+					print "ERROR : " + msg
+			else :					# si le JOG est l'ennemi
+				if msg_parts[1] == 'C' :
+					ennemy_coordinates = [float(msg_parts[2]),float(msg_parts[3])]
 		if not( (None in JOG_IP) | (None in JOG_coordinates) ) :
 			update_coordinates()
