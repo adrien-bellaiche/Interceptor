@@ -39,6 +39,10 @@ def update_coordinates() :
 
 while True :
 	msg, client = mysock.recvfrom(255)
+	try :
+		JOG_IP[int(msg.split()[0])] = client	# enregistrer l'adresse du JOG dans la case correspondant a son indentifiant
+	except Exception as e :
+		pass
 	if MISSION_FINISHED :
 		for e in JOG_IP :
 			mysock.sendto('F',e)
@@ -51,7 +55,6 @@ while True :
 		else :
 			msg_parts = msg.split()
 			if msg_parts[0] != '42' :		# verifier si le JOG n'est pas l'ennemi
-				JOG_IP[int(msg_parts[0])] = client
 				if msg_parts[1] == 'C' :	# cas où le message reçu est une mise à jour de la position
 					JOG_X = 			float(msg_parts[2])
 					JOG_Y = 			float(msg_parts[3])
