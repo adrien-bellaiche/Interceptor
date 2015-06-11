@@ -9,6 +9,7 @@ mysock = 		socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 mysock.bind((server, port))
 
 INTERCEPTION_RANGE = 	2.
+MISSION_STARTED =	False
 MISSION_FINISHED =	False
 
 JOG_IP = 		[None]*5
@@ -42,17 +43,22 @@ while True :
 		for e in JOG_IP :
 			mysock.sendto('F',e)
 	if not MISSION_FINISHED :
-		msg_parts = msg.split()
-		JOG_IP[int(msg_parts[0])] = client
-		if msg_parts[1] == 'C' :	# cas où le message reçu est une mise à jour de la position
-			JOG_X = 			float(msg_parts[2])
-			JOG_Y = 			float(msg_parts[3])
-			JOG_coordinates[int(msg_parts[0])] =	[JOG_X, JOG_Y]
-			# vérification de la distance à l'ennemi
-			if ( math.sqrt( (JOG_X-ennemy_coordinates[0])**2 + (JOG_Y-ennemy_coordinates[1])**2 ) <= INTERCEPTION_RANGE ) :
-				MISSION_FINISHED = True
+		if MISSION_STARTED :
+			msg_parts = msg.split()
+			JOG_IP[int(msg_parts[0])] = client
+			if msg_parts[1] == 'C' :	# cas où le message reçu est une mise à jour de la position
+				JOG_X = 			float(msg_parts[2])
+				JOG_Y = 			float(msg_parts[3])
+				JOG_coordinates[int(msg_parts[0])] =	[JOG_X, JOG_Y]
+				# vérification de la distance à l'ennemi
+				if ( math.sqrt( (JOG_X-ennemy_coordinates[0])**2 + (JOG_Y-ennemy_coordinates[1])**2 ) <= INTERCEPTION_RANGE ) :
+					MISSION_FINISHED = True
+		if not MISSION_STARTED :
+			for e in JOG_IP :
+				mysock.sendto('S',e)
+			MISSION_STARTED = True
 		elif msg_parts[1] == 'E' :	# cas où le message reçu est une erreur
-			# TODO
+			print "ERROR : " + msg
 			pass
 		if not( (None in JOG_IP) | (None in JOG_coordinates) ) :
 			update_coordinates()
