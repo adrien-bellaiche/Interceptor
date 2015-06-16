@@ -1,4 +1,5 @@
 11
 cd /root
+rm - rf Interceptor
 mkdir Interceptor
 cd Interceptor

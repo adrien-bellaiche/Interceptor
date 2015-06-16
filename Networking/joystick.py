@@ -1,6 +1,9 @@
 #-*-coding:utf-8-*-
-import pygame, socket
+import socket
+
+import pygame
 from pygame.locals import *
+
 
 J_AXIS_WE =		0
 J_AXIS_NS =		1
@@ -13,7 +16,7 @@ J_INTERVAL_0NS =	[-0.3, +0.3]
 joystick_WE =		0
 joystick_NS =		0
 
-server = 		"127.0.0.1"
+server = 		"172.20.12.63"
 port = 			55142
 mysock = 		socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 mysock.bind((server, port))

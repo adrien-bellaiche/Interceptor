@@ -2,7 +2,7 @@ clear all; close all; clc;
 data = load('logasserv.txt');
 data(:,1) = data(:,1) - data(1,1);
 data2 = load('logtheta.txt');
-data2(:,1) = data2(:,1) - data2(1,1);
+%data2(:,1) = data2(:,1) - data2(1,1);
 data3 = load('logpos.txt');
 
 figure;

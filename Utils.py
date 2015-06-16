@@ -1,5 +1,7 @@
 __author__ = 'Fenix'
 
+from math import sqrt
+
 parsedic = {"x": 0,
             "y": 1,
             "id": 2,
@@ -40,6 +42,24 @@ def make_mission_file(desc):  # TODO : test
         descs = [_.replace(" ", "") for _ in desc.split(',')]
         for desci in descs:
             mission_file.write("".join([desci, "\n"]))
+
+
+def norm(v):
+    res = 0
+    for _ in v:
+        res += _*_
+    return sqrt(res)
+
+
+def list_dif(a, b):
+    return [a[k] - b[k] for k in range(min(len(a), len(b)))]
+
+def list_add(a, b):
+    return [a[k] + b[k] for k in range(min(len(a), len(b)))]
+
+def list_mul(k, iterable):
+    return [k*iterable[_] for _ in range(len(iterable))]
+
 
 class ParseException(Exception):
     def __init__(self, word):

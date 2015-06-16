@@ -2,12 +2,11 @@
 __author__ = 'Fenix'
 
 import threading
-import numpy as np
-from numpy.linalg import norm
 from Jog_Utils.jog_highlevel import *
 from Jog_Utils.jogio import *
 from Jog_Utils.jogio_cmd_motors import *
-from math import atan2
+from math import atan2, cos, sin
+from Utils import norm, list_dif, list_mul, list_add
 
 
 # Frame : +Y is East, +X is North.
@@ -22,21 +21,22 @@ class Jog():
     KP_ORI = MAX_WHEEL_SPEED / pi
     KD_ORI = 2
     KI_ORI = 0.05
-    KP_SPEED = 50
-    KI_SPEED = 30
+    KP_SPEED = 30
+    KI_SPEED = 20
 
     def __init__(self, x, y, user, dt):
-        self.position = np.array([x, y])
+        motor_init()
+        self.position = [x, y]
         self.theta = get_theta()
         self.target = None
         self.target_max_known_speed = 0
-        self.motor_speeds = np.array([0.0, 0.0])
+        self.motor_speeds = [0.0, 0.0]
         self.id = user
-        self.odos = np.array(get_odometry())
+        self.odos = get_odometry()
         self.allies = []
         self.dt = dt
         self.commands = [0, 0]
-        self.I_error_speed = np.array([0.0, 0.0])
+        self.I_error_speed = [0.0, 0.0]
         self.I_error_theta = 0
         self.motor_curr_direction = [1, 1]
         self.motor_curr_direction_order = [1, 1]
@@ -58,10 +58,10 @@ class Jog():
         p.close()
 
     def update_closest_allies(self, v1, v2):
-        self.allies = [np.array(v1), np.array(v2)]
+        self.allies = [v1, v2]
 
     def update_target(self, v):  # Contains x,y,vx,vy
-        self.target = np.array(v)
+        self.target = v
 
     def asservissement(self):
         if self.started:
@@ -77,14 +77,14 @@ class Jog():
         print "Asservissement routine executed in ", time.clock() - initime, "s"  # Comment after debugging
 
     def test_order(self):
-        return np.array([-Jog.NORMAL_SPEED, -Jog.NORMAL_SPEED])
+        return [-Jog.NORMAL_SPEED, -Jog.NORMAL_SPEED]
 
     def order(self, last_theta):
-        p = np.array([0, 0])
+        p = [0, 0]
         if self.target is not None:
             # Détermination de la direction à prendre
             targ_dir = self.test_dir()
-            #targ_dir = self.determine_dir()
+            # targ_dir = self.determine_dir()
             with open("logtheta.txt", "a") as logfile:
                 logfile.write(" ".join([str(time.time()), str(atan2(targ_dir[1], targ_dir[0])), str(self.theta)]))
                 logfile.write("\n")
@@ -94,17 +94,19 @@ class Jog():
             self.I_error_theta += delta_ori
             d_theta = self.theta - last_theta
             if abs(delta_ori) > pi / 6:  # Requiert de tourner avant de commencer à avancer
-                p = [ Jog.NORMAL_SPEED * (Jog.KP_ORI*delta_ori - Jog.KD_ORI*d_theta),
-                     -Jog.NORMAL_SPEED * (Jog.KP_ORI*delta_ori + Jog.KD_ORI*d_theta)]
+                p = [Jog.NORMAL_SPEED * (Jog.KP_ORI * delta_ori - Jog.KD_ORI * d_theta),
+                     -Jog.NORMAL_SPEED * (Jog.KP_ORI * delta_ori + Jog.KD_ORI * d_theta)]
             else:  # Assez bien orienté vers la destination pour aller "droit"
-                p = [Jog.NORMAL_SPEED * (1 + Jog.KP_ORI*delta_ori - Jog.KD_ORI*d_theta + Jog.KI_ORI*self.I_error_theta),
-                     Jog.NORMAL_SPEED * (1 - Jog.KP_ORI*delta_ori + Jog.KD_ORI*d_theta - Jog.KI_ORI*self.I_error_theta)]
+                p = [Jog.NORMAL_SPEED * (
+                    1 + Jog.KP_ORI * delta_ori - Jog.KD_ORI * d_theta + Jog.KI_ORI * self.I_error_theta),
+                     Jog.NORMAL_SPEED * (
+                         1 - Jog.KP_ORI * delta_ori + Jog.KD_ORI * d_theta - Jog.KI_ORI * self.I_error_theta)]
         else:
-            p = np.array([0, 0])
+            p = [0, 0]
         return p
 
     def asserv_speed(self, targ_speed):
-        self.I_error_speed += targ_speed - self.motor_speeds
+        self.I_error_speed = list_add(list_dif(targ_speed, self.motor_speeds), self.I_error_speed)
         self.commands[0] = min(100, max(-100, self.commands[0] + Jog.KP_SPEED * (
             targ_speed[0] - self.motor_speeds[0]) + Jog.KI_SPEED * self.I_error_speed[0]))
         self.commands[1] = min(100, max(-100, self.commands[1] + Jog.KP_SPEED * (
@@ -118,18 +120,18 @@ class Jog():
             logfile.write("\n")
         motors_set_direction(self.commands[0], self.commands[1])
         self.motor_curr_direction_order = [copysign(1, self.commands[0]), copysign(1, self.commands[1])]
-        motors_set_speed(abs(self.commands[0]), abs(self.commands[1]))
+        motors_set_speed(int(abs(self.commands[0])), int(abs(self.commands[1])))
 
     def vect_to_target(self, position):
         return self.target[2:] - position
 
     def update_state(self):
-        new_odos = np.array(get_odometry())
-        wheels_speed = Jog.TICKS_TO_METER * (new_odos - self.odos) / self.dt
+        new_odos = get_odometry()
+        wheels_speed = list_mul(Jog.TICKS_TO_METER/self.dt, list_dif(new_odos, self.odos))
         theta = get_theta()
         wheels_speed = self.compute_wheel_direction_state_based(wheels_speed)
-        speed = np.mean(wheels_speed)
-        self.position += speed * np.array([np.cos(theta), np.sin(theta)])
+        speed = 0.5 * (wheels_speed[0] + wheels_speed[1])
+        self.position += [speed * cos(theta), speed * sin(theta)]
         self.motor_speeds = wheels_speed
         self.odos = new_odos
         self.theta = theta
@@ -139,12 +141,11 @@ class Jog():
 
     # Method working. May need some refinement.
     def compute_wheel_direction_state_based(self, wheels_speed):
-        dv = wheels_speed - self.motor_speeds
+        dv = list_dif(wheels_speed, self.motor_speeds)
         for i in [0, 1]:
             if self.motor_curr_direction[i] != self.motor_curr_direction_order[i] and dv[i] > 0:
                 self.motor_curr_direction[i] = -self.motor_curr_direction[i]
-        return np.array(
-            [wheels_speed[0] * self.motor_curr_direction[0], wheels_speed[1] * self.motor_curr_direction[1]])
+        return [wheels_speed[0] * self.motor_curr_direction[0], wheels_speed[1] * self.motor_curr_direction[1]]
 
     # Method leading to numerous mistakes on too many cases. Could be refined.
     # Not meant to be used in its current state.
@@ -191,7 +192,7 @@ class Jog():
         p = d2prerob - intercept_range_pre - intercept_range_self
         q = d2postrob - intercept_range_post - intercept_range_self
 
-        targ_dir = np.array([0, 0])
+        targ_dir = [0, 0]
         # algorithmes de regulation des intercepteurs autour de l'ennemi
         if (p < -Jog.SAFETY_MARGIN) and (q < -Jog.SAFETY_MARGIN):
             targ_dir = v2center / d2center
@@ -207,7 +208,7 @@ class Jog():
         return targ_dir
 
     def test_dir(self):
-        return np.array([0, 1])
+        return [0, 1]
 
     def dtheta(self, v1, v2):
         return (v2 - v1) / Jog.WHEEL_E

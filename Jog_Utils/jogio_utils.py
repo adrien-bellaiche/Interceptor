@@ -14,7 +14,6 @@ import time
 import mmap
 import os
 
-from Jog_Utils import vjog
 
 
 robotPlatform = ""  # unset at start , after init either JOG or vJOG
@@ -49,6 +48,7 @@ def check_running_onjog():
         else:
             print "init vJOG"
             from multiprocessing import Process, Manager
+            from Jog_Utils import vjog
             # shared namespace
             global ns, simuProc, sharedRegs, changeRegs
             manager = Manager()
