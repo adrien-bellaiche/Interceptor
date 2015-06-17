@@ -1,9 +1,11 @@
 # coding=utf-8
 __author__ = 'Fenix'
-from JogAsservissement import Jog
-from Jog_Utils.jogio import *
-from Utils import *
 import socket
+
+from JogCommand.JogAsservissement import Jog
+from JogCommand.jogio import *
+from JogCommand.Utils import *
+
 
 ERROR_ALLGOOD = 0
 ERROR_STUCK = 1

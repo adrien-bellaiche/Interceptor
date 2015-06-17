@@ -15,7 +15,6 @@ import mmap
 import os
 
 
-
 robotPlatform = ""  # unset at start , after init either JOG or vJOG
 #vFpgaRegs = array.array('c')  # virtual FPGA registers
 #vI2cBus = [] # virtual I2C bus
@@ -48,7 +47,7 @@ def check_running_onjog():
         else:
             print "init vJOG"
             from multiprocessing import Process, Manager
-            from Jog_Utils import vjog
+            from JogCommand import vjog
             # shared namespace
             global ns, simuProc, sharedRegs, changeRegs
             manager = Manager()
@@ -206,7 +205,7 @@ def jog_i2c_read(addr, register, debug):
     import posix
 
     n_i2c = 0
-    f_i2c = posix.open("/dev/i2c-%i" % (n_i2c), posix.O_RDWR)
+    f_i2c = posix.open("/dev/i2c-%i" % n_i2c, posix.O_RDWR)
 
     flags = I2C_M_WR
     buf = ctypes.create_string_buffer(1)

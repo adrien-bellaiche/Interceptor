@@ -1,6 +1,8 @@
 import sys
+
 import pexpect
-from Utils import make_mission_file
+from JogCommand.Utils import make_mission_file
+
 
 nArgs = len(sys.argv)-1
 if nArgs != 1:

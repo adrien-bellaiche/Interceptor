@@ -55,10 +55,6 @@ def list_dif(a, b):
     return [a[k] - b[k] for k in range(min(len(a), len(b)))]
 
 
-def list_mod(a, b):
-    return [_ % b for _ in a]
-
-
 def list_add(a, b):
     return [a[k] + b[k] for k in range(min(len(a), len(b)))]
 

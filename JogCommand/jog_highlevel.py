@@ -1,6 +1,7 @@
-from Jog_Utils.jogio import *
-from Jog_Utils.jogio_cmd_motors import *
+from JogCommand.jogio import *
+from JogCommand.jogio_cmd_motors import *
 from math import copysign, pi
+import time
 
 
 # leds, set and get

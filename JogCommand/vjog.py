@@ -1,7 +1,7 @@
 import time
 import math
 import sys
-from Jog_Utils import jog2d
+from JogCommand import jog2d
 import pygame
 
 

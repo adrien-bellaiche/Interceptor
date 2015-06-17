@@ -2,15 +2,19 @@
 __author__ = 'Fenix'
 
 import threading
-from Jog_Utils.jog_highlevel import *
-from Jog_Utils.jogio import *
-from Jog_Utils.jogio_cmd_motors import *
 from math import atan2, cos, sin
-from Utils import norm, list_dif, list_mul, list_add, list_mod
+
+from JogCommand.jog_highlevel import *
+from JogCommand.jogio_cmd_motors import *
+from JogCommand.Utils import norm, list_dif, list_mul, list_add
 
 
 # Frame : +Y is East, +X is North.
 class Jog():
+    COMMAND_UNDEFINED = -1
+    COMMAND_DIRECTION = 0
+    COMMAND_TARGET = 1
+    COMMAND_MANUAL = 2
     MAX_WHEEL_SPEED = 0.4  # m/s
     SAFETY_MARGIN = 2  # m
     TICKS_PER_TURN = 576
@@ -36,6 +40,7 @@ class Jog():
         self.odos = get_odometry()
         self.allies = []
         self.dt = dt
+        self.command_type = Jog.COMMAND_UNDEFINED
         self.commands = [0, 0]
         self.I_error_speed = [0.0, 0.0]
         self.D_speed = [0.0, 0.0]
@@ -54,7 +59,8 @@ class Jog():
         self.init_log("logtheta.txt")
         self.init_log("logpos.txt")
 
-    def init_log(self, filename):
+    @staticmethod
+    def init_log(filename):
         p = open(filename, "w")
         p.write("")
         p.close()
@@ -70,23 +76,37 @@ class Jog():
             t = threading.Timer(self.dt, self.asservissement)
             t.daemon = True
             t.start()
-        initime = time.clock()  # Comment after debugging
+        #initime = time.clock()  # Comment after debugging
         last_theta = self.theta
         # Update state
         self.update_state()
-        # self.asserv_speed(self.order(last_theta))
-        self.asserv_speed(self.test_order())
-        print "Asservissement routine executed in ", time.clock() - initime, "s"  # Comment after debugging
+        self.asserv_speed(self.order(last_theta))
+        #print "Asservissement routine executed in ", time.clock() - initime, "s"  # Comment after debugging
 
-    def test_order(self):
+    def set_command_mode(self, mode):
+        self.command_type = mode
+
+    @staticmethod
+    def test_order():
         return [Jog.NORMAL_SPEED, Jog.NORMAL_SPEED]
+
+    def manual_dir(self):
+        ori = (pi*self.target[1]/180.0 + self.theta) % (2*pi)  # TODO : à vérifier
+        return [self.target[0]*cos(ori), self.target[0]*sin(ori)]
 
     def order(self, last_theta):
         p = [0, 0]
         if self.target is not None:
             # Détermination de la direction à prendre
-            targ_dir = self.test_dir()
-            # targ_dir = self.determine_dir()
+            targ_dir = None
+            if self.command_type == Jog.COMMAND_DIRECTION:
+                pass
+            elif self.command_type == Jog.COMMAND_TARGET:
+                targ_dir = self.determine_dir()
+            elif self.command_type == Jog.COMMAND_MANUAL:
+                targ_dir = self.manual_dir()
+            elif self.command_type == Jog.COMMAND_UNDEFINED:
+                targ_dir = self.test_dir()
             with open("logtheta.txt", "a") as logfile:
                 logfile.write(" ".join([str(time.time()), str(atan2(targ_dir[1], targ_dir[0])), str(self.theta)]))
                 logfile.write("\n")
@@ -99,10 +119,14 @@ class Jog():
                 p = [Jog.NORMAL_SPEED * (Jog.KP_ORI * delta_ori - Jog.KD_ORI * d_theta),
                      -Jog.NORMAL_SPEED * (Jog.KP_ORI * delta_ori + Jog.KD_ORI * d_theta)]
             else:  # Assez bien orienté vers la destination pour aller "droit"
-                p = [Jog.NORMAL_SPEED * (
-                    0.75 + Jog.KP_ORI * delta_ori - Jog.KD_ORI * d_theta + Jog.KI_ORI * self.I_error_theta),
-                     Jog.NORMAL_SPEED * (
-                         0.75 - Jog.KP_ORI * delta_ori + Jog.KD_ORI * d_theta - Jog.KI_ORI * self.I_error_theta)]
+                p = [Jog.NORMAL_SPEED * (0.75
+                                         + Jog.KP_ORI * delta_ori
+                                         - Jog.KD_ORI * d_theta
+                                         + Jog.KI_ORI * self.I_error_theta),
+                     Jog.NORMAL_SPEED * (0.75
+                                         - Jog.KP_ORI * delta_ori
+                                         + Jog.KD_ORI * d_theta
+                                         - Jog.KI_ORI * self.I_error_theta)]
         else:
             p = [0, 0]
         return p
@@ -214,8 +238,10 @@ class Jog():
                 targ_dir = v2prerob / d2prerob
         return targ_dir
 
-    def test_dir(self):
+    @staticmethod
+    def test_dir():
         return [0, 1]
 
-    def dtheta(self, v1, v2):
+    @staticmethod
+    def dtheta(v1, v2):
         return (v2 - v1) / Jog.WHEEL_E
