@@ -6,22 +6,23 @@ from Jog_Utils.jog_highlevel import *
 from Jog_Utils.jogio import *
 from Jog_Utils.jogio_cmd_motors import *
 from math import atan2, cos, sin
-from Utils import norm, list_dif, list_mul, list_add
+from Utils import norm, list_dif, list_mul, list_add, list_mod
 
 
 # Frame : +Y is East, +X is North.
 class Jog():
-    MAX_WHEEL_SPEED = 0.6  # m/s
+    MAX_WHEEL_SPEED = 0.4  # m/s
     SAFETY_MARGIN = 2  # m
     TICKS_PER_TURN = 576
     WHEEL_DIAMETER = 0.058928
     WHEEL_E = 0.2
     TICKS_TO_METER = WHEEL_DIAMETER * pi / TICKS_PER_TURN
-    NORMAL_SPEED = 0.4  # m/s
+    NORMAL_SPEED = 0.3  # m/s
     KP_ORI = MAX_WHEEL_SPEED / pi
     KD_ORI = 2
     KI_ORI = 0.05
     KP_SPEED = 30
+    KD_SPEED = -1
     KI_SPEED = 20
 
     def __init__(self, x, y, user, dt):
@@ -37,6 +38,7 @@ class Jog():
         self.dt = dt
         self.commands = [0, 0]
         self.I_error_speed = [0.0, 0.0]
+        self.D_speed = [0.0, 0.0]
         self.I_error_theta = 0
         self.motor_curr_direction = [1, 1]
         self.motor_curr_direction_order = [1, 1]
@@ -72,12 +74,12 @@ class Jog():
         last_theta = self.theta
         # Update state
         self.update_state()
-        self.asserv_speed(self.order(last_theta))
-        # self.asserv_speed(self.test_order())
+        # self.asserv_speed(self.order(last_theta))
+        self.asserv_speed(self.test_order())
         print "Asservissement routine executed in ", time.clock() - initime, "s"  # Comment after debugging
 
     def test_order(self):
-        return [-Jog.NORMAL_SPEED, -Jog.NORMAL_SPEED]
+        return [Jog.NORMAL_SPEED, Jog.NORMAL_SPEED]
 
     def order(self, last_theta):
         p = [0, 0]
@@ -98,19 +100,23 @@ class Jog():
                      -Jog.NORMAL_SPEED * (Jog.KP_ORI * delta_ori + Jog.KD_ORI * d_theta)]
             else:  # Assez bien orienté vers la destination pour aller "droit"
                 p = [Jog.NORMAL_SPEED * (
-                    1 + Jog.KP_ORI * delta_ori - Jog.KD_ORI * d_theta + Jog.KI_ORI * self.I_error_theta),
+                    0.75 + Jog.KP_ORI * delta_ori - Jog.KD_ORI * d_theta + Jog.KI_ORI * self.I_error_theta),
                      Jog.NORMAL_SPEED * (
-                         1 - Jog.KP_ORI * delta_ori + Jog.KD_ORI * d_theta - Jog.KI_ORI * self.I_error_theta)]
+                         0.75 - Jog.KP_ORI * delta_ori + Jog.KD_ORI * d_theta - Jog.KI_ORI * self.I_error_theta)]
         else:
             p = [0, 0]
         return p
 
     def asserv_speed(self, targ_speed):
         self.I_error_speed = list_add(list_dif(targ_speed, self.motor_speeds), self.I_error_speed)
-        self.commands[0] = min(100, max(-100, self.commands[0] + Jog.KP_SPEED * (
-            targ_speed[0] - self.motor_speeds[0]) + Jog.KI_SPEED * self.I_error_speed[0]))
-        self.commands[1] = min(100, max(-100, self.commands[1] + Jog.KP_SPEED * (
-            targ_speed[1] - self.motor_speeds[1]) + Jog.KI_SPEED * self.I_error_speed[1]))
+        self.commands[0] = min(100, max(-100,
+                                        + Jog.KP_SPEED * (targ_speed[0] - self.motor_speeds[0])
+                                        + Jog.KD_SPEED * self.D_speed[0]
+                                        + Jog.KI_SPEED * self.I_error_speed[0]))
+        self.commands[1] = min(100, max(-100,
+                                        + Jog.KP_SPEED * (targ_speed[1] - self.motor_speeds[1])
+                                        + Jog.KD_SPEED * self.D_speed[0]
+                                        + Jog.KI_SPEED * self.I_error_speed[1]))
         with open("logasserv.txt", "a") as logfile:
             logfile.write(" ".join([str(time.time()),
                                     str(targ_speed[0]), str(self.motor_speeds[0]),
@@ -127,11 +133,12 @@ class Jog():
 
     def update_state(self):
         new_odos = get_odometry()
-        wheels_speed = list_mul(Jog.TICKS_TO_METER/self.dt, list_dif(new_odos, self.odos))
+        wheels_speed = list_mul(Jog.TICKS_TO_METER / self.dt, list_dif(new_odos, self.odos))
         theta = get_theta()
         wheels_speed = self.compute_wheel_direction_state_based(wheels_speed)
         speed = 0.5 * (wheels_speed[0] + wheels_speed[1])
         self.position += [speed * cos(theta), speed * sin(theta)]
+        self.D_speed = list_dif(wheels_speed, self.motor_speeds)
         self.motor_speeds = wheels_speed
         self.odos = new_odos
         self.theta = theta
