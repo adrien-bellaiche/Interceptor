@@ -45,9 +45,9 @@ def check_running_onjog():
         if (infos['nbits'] == '32bit') and (infos['machine'] == 'armv5tejl'):
             robotPlatform = "JOG"
         else:
+            import vjog
             print "init vJOG"
             from multiprocessing import Process, Manager
-            from JogCommand import vjog
             # shared namespace
             global ns, simuProc, sharedRegs, changeRegs
             manager = Manager()

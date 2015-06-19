@@ -1,8 +1,9 @@
-from JogCommand.jogio import *
-from JogCommand.jogio_cmd_motors import *
 from math import copysign, pi
 import time
 
+from jogio import *
+from jogio_cmd_motors import *
+from Utils import list_add, list_mul
 
 # leds, set and get
 def set_led(v):
@@ -229,7 +230,6 @@ def get_odometry():
     :return: [leftOdometer, rightOdometer]
     """
     p = [fpga_read(0x22), fpga_read(0x20)]
-
     for _ in [0, 1]:
         if p[_] + get_odometry.count[_]*65535 < (get_odometry.odos[_] - 5000):
             get_odometry.count[_] += 1

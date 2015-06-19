@@ -1,8 +1,10 @@
 import time
 import math
 import sys
-from JogCommand import jog2d
+
 import pygame
+
+import jog2d
 
 
 def simu(ns, shared_regs, change_regs):

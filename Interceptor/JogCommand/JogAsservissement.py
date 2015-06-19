@@ -4,9 +4,9 @@ __author__ = 'Fenix'
 import threading
 from math import atan2, cos, sin
 
-from JogCommand.jog_highlevel import *
-from JogCommand.jogio_cmd_motors import *
-from JogCommand.Utils import norm, list_dif, list_mul, list_add
+from jog_highlevel import *
+from jogio_cmd_motors import *
+from Utils import norm, list_dif, list_mul, list_add
 
 
 # Frame : +Y is East, +X is North.
@@ -25,9 +25,9 @@ class Jog():
     KP_ORI = MAX_WHEEL_SPEED / pi
     KD_ORI = 2
     KI_ORI = 0.05
-    KP_SPEED = 30
-    KD_SPEED = -1
-    KI_SPEED = 20
+    KP_SPEED = 20
+    KD_SPEED = - 10
+    KI_SPEED = 50
 
     def __init__(self, x, y, user, dt):
         motor_init()
@@ -49,12 +49,14 @@ class Jog():
         self.motor_curr_direction_order = [1, 1]
         self.init_logs()
         self.started = False
+        self.skipped = 0
 
     def start(self):
         self.started = True
         self.asservissement()
 
     def init_logs(self):
+        self.init_log("logodometry.txt")
         self.init_log("logasserv.txt")
         self.init_log("logtheta.txt")
         self.init_log("logpos.txt")
@@ -76,12 +78,13 @@ class Jog():
             t = threading.Timer(self.dt, self.asservissement)
             t.daemon = True
             t.start()
-        #initime = time.clock()  # Comment after debugging
+        # initime = time.clock()  # Comment after debugging
         last_theta = self.theta
         # Update state
-        self.update_state()
-        self.asserv_speed(self.order(last_theta))
-        #print "Asservissement routine executed in ", time.clock() - initime, "s"  # Comment after debugging
+        if self.update_state() == 0:
+            self.asserv_speed(self.test_order())
+            #self.asserv_speed(self.order(last_theta))
+            #print "Asservissement routine executed in ", time.clock() - initime, "s"  # Comment after debugging
 
     def set_command_mode(self, mode):
         self.command_type = mode
@@ -91,8 +94,8 @@ class Jog():
         return [Jog.NORMAL_SPEED, Jog.NORMAL_SPEED]
 
     def manual_dir(self):
-        ori = (pi*self.target[1]/180.0 + self.theta) % (2*pi)  # TODO : à vérifier
-        return [self.target[0]*cos(ori), self.target[0]*sin(ori)]
+        ori = (pi * self.target[1] / 180.0 + self.theta) % (2 * pi)  # TODO : à vérifier
+        return [self.target[0] * cos(ori), self.target[0] * sin(ori)]
 
     def order(self, last_theta):
         p = [0, 0]
@@ -134,11 +137,11 @@ class Jog():
     def asserv_speed(self, targ_speed):
         self.I_error_speed = list_add(list_dif(targ_speed, self.motor_speeds), self.I_error_speed)
         self.commands[0] = min(100, max(-100,
-                                        + Jog.KP_SPEED * (targ_speed[0] - self.motor_speeds[0])
+                                        Jog.KP_SPEED * (targ_speed[0] - self.motor_speeds[0])
                                         + Jog.KD_SPEED * self.D_speed[0]
                                         + Jog.KI_SPEED * self.I_error_speed[0]))
         self.commands[1] = min(100, max(-100,
-                                        + Jog.KP_SPEED * (targ_speed[1] - self.motor_speeds[1])
+                                        Jog.KP_SPEED * (targ_speed[1] - self.motor_speeds[1])
                                         + Jog.KD_SPEED * self.D_speed[0]
                                         + Jog.KI_SPEED * self.I_error_speed[1]))
         with open("logasserv.txt", "a") as logfile:
@@ -157,7 +160,13 @@ class Jog():
 
     def update_state(self):
         new_odos = get_odometry()
-        wheels_speed = list_mul(Jog.TICKS_TO_METER / self.dt, list_dif(new_odos, self.odos))
+        wheels_speed = list_mul(Jog.TICKS_TO_METER / self.dt / (self.skipped + 1), list_dif(new_odos, self.odos))
+        with open("logodometry.txt", "a") as logfile:
+            logfile.write(" ".join([str(new_odos[0]), str(new_odos[1])]))
+            logfile.write("\n")
+        if wheels_speed[0] < 0 or wheels_speed[1] < 0:
+            self.skipped += 1
+            return -1
         theta = get_theta()
         wheels_speed = self.compute_wheel_direction_state_based(wheels_speed)
         speed = 0.5 * (wheels_speed[0] + wheels_speed[1])
@@ -169,6 +178,9 @@ class Jog():
         with open("logpos.txt", "a") as logfile:
             logfile.write(" ".join([str(self.position[0]), str(self.position[1])]))
             logfile.write("\n")
+        if self.skipped > 0:
+            self.skipped = 0
+        return 0
 
     # Method working. May need some refinement.
     def compute_wheel_direction_state_based(self, wheels_speed):

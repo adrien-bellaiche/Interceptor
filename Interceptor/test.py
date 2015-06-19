@@ -1,6 +1,10 @@
 # coding=utf-8
 __author__ = 'Fenix'
 
+from JogCommand.jogio import device_init
+import time
+
+
 if __name__ == "__main__":
     device_init()
     time.sleep(2)
@@ -11,5 +15,6 @@ if __name__ == "__main__":
     x, y, selfid, serverIP, serverPort = parse_mission_file('mission.conf')
     robot = Jog(x, y, selfid, DT)
     robot.update_target([0.5, 0.5, 0, 0])
+    robot.set_command_mode(Jog.COMMAND_UNDEFINED)
     robot.start()
     time.sleep(100)

@@ -1,7 +1,7 @@
 import sys
 
 import pexpect
-from JogCommand.Utils import make_mission_file
+from Interceptor.JogCommand.Utils import make_mission_file
 
 
 nArgs = len(sys.argv)-1

@@ -2,7 +2,7 @@
 module jogio_cmd_motors : controlling motors via FPGA registers
 """
 
-from JogCommand.jogio import fpga_read, fpga_write
+from jogio import fpga_read, fpga_write
 
 motorDirectionForward = 0x0
 motorDirectionBackward = 0x1

@@ -4,7 +4,7 @@ import socket
 
 from JogCommand.JogAsservissement import Jog
 from JogCommand.jogio import *
-from JogCommand.Utils import *
+from Interceptor.JogCommand.Utils import *
 
 
 ERROR_ALLGOOD = 0

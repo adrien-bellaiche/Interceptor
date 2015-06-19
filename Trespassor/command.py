@@ -2,7 +2,6 @@ import socket
 
 
 def go_go(gadgeto_jog):
-    from JogCommand.jog_highlevel import compass_highres
     while True:
         mysock.sendto(msgout, (server, port))
         msgin, rserver = mysock.recvfrom(255)
@@ -38,8 +37,8 @@ if __name__ == "__main__":
     time.sleep(2)
     #setHeadingSimple(10)
     DT = 0.2
-    from JogCommand.JogAsservissement import *
-    from JogCommand.Utils import *
+    from Interceptor.JogCommand.JogAsservissement import *
+
     robot = Jog(0, 0, 0, DT)
     robot.set_command_mode(Jog.COMMAND_MANUAL)
     robot.target = [0, 0]  # [speed, orientation (repere du robot)]

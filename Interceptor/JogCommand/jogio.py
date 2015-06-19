@@ -10,8 +10,8 @@
     - linux drivers files (infrared, temperature)
 
 """
-from JogCommand import jogio_utils
-from JogCommand.jogio_utils import *  # low level IO controls
+import jogio_utils
+from jogio_utils import *  # low level IO controls
 
 
 def fpga_read(addr):
