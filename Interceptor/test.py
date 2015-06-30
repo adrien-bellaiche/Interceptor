@@ -14,7 +14,7 @@ if __name__ == "__main__":
     from JogCommand.Utils import *
     x, y, selfid, serverIP, serverPort = parse_mission_file('mission.conf')
     robot = Jog(x, y, selfid, DT)
-    robot.update_target([0.5, 0.5, 0, 0])
     robot.set_command_mode(Jog.COMMAND_UNDEFINED)
+    robot.target = [0.5, 0.5]
     robot.start()
     time.sleep(100)

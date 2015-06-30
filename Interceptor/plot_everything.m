@@ -2,7 +2,7 @@ clear all; close all; clc;
 data = load('logasserv.txt');
 data(:,1) = data(:,1) - data(1,1);
 data2 = load('logtheta.txt');
-%data2(:,1) = data2(:,1) - data2(1,1);
+data2(:,1) = data2(:,1) - data2(1,1);
 data3 = load('logpos.txt');
 data4 = load('logodometry.txt');
 
@@ -42,9 +42,9 @@ legend('command left', 'command right')
 title('Wheel command')
 
 figure
-plot(data2(:,1), data2(:,2), 'red')
+plot(data2(:,1), 180/pi*data2(:,2), 'red')
 hold on
-plot(data2(:,1), data2(:,3), 'blue')
+plot(data2(:,1), 180/pi*data2(:,3), 'blue')
 legend('Target theta', 'real theta')
 title('Theta')
 
