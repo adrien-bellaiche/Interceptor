@@ -238,9 +238,12 @@ def get_odometry():
 get_odometry.count = [0, 0]
 get_odometry.odos = [fpga_read(0x22), fpga_read(0x20)]
 
+
 def get_theta():
     mag_ori = compass_highres()
     return mag_ori*2*pi/360
+
+
 
 # unitary tests of JOG's sensors and actuators
 

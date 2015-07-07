@@ -16,7 +16,7 @@ J_INTERVAL_0NS = [-0.3, +0.3]
 joystick_WE = 0
 joystick_NS = 0
 
-server = "172.20.12.63"
+server = "127.0.0.1"
 port = 55142
 mysock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 mysock.bind((server, port))
@@ -53,8 +53,9 @@ def action_joystick_axe(axe, valeur):
             joystick_NS = 1
         elif J_INTERVAL_0NS[0] <= valeur <= J_INTERVAL_0NS[1]:
             joystick_NS = 0
-    print str(joystick_WE) + ',' + str(joystick_NS) + '\n'
-    mysock.sendto('CONS' + str(joystick_WE) + ',' + str(joystick_NS), client)
+    if joystick_NS != 0 or joystick_WE != 0:
+        print str(joystick_WE) + ',' + str(joystick_NS) + '\n'
+        mysock.sendto('CONS' + str(joystick_WE) + ',' + str(joystick_NS), client)
 
 
 def bouclage():

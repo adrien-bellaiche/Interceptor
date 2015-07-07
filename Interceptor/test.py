@@ -9,7 +9,7 @@ if __name__ == "__main__":
     device_init()
     time.sleep(2)
     #setHeadingSimple(10)
-    DT = 0.2
+    DT = 0.1
     from JogCommand.JogAsservissement import *
     from JogCommand.Utils import *
     x, y, selfid, serverIP, serverPort = parse_mission_file('mission.conf')

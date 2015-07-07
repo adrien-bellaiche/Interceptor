@@ -59,8 +59,8 @@ def simu(ns, shared_regs, change_regs):
     leds = [0, 0, 0, 0]  # leds off
 
     # init location
-    xjog = 100
-    yjog = 100
+    xjog = 500
+    yjog = 250
     xjogi = int(round(xjog))
     yjogi = int(round(yjog))
     jog.translate(xjogi, yjogi)
