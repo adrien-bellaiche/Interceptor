@@ -2,7 +2,7 @@
 __author__ = 'Fenix'
 
 import threading
-from math import atan2, cos, sin, exp
+from math import atan2, cos, sin
 
 from jog_highlevel import *
 from jogio_cmd_motors import *
@@ -120,10 +120,9 @@ class Jog(object):
     def order(self, last_theta):
         if self._target is not None:
             # Détermination de la direction à prendre
-            # TODO : les self.dir doivent cracher v,theta, et pas la direction uniquement.
             targ = None
             if self.command_type == Jog.COMMAND_DIRECTION:
-                # TODO
+                # TODO les self.dir doivent cracher v,theta, et pas la direction uniquement.
                 pass
             elif self.command_type == Jog.COMMAND_TARGET:
                 targ = self.determine_dir()
@@ -132,7 +131,7 @@ class Jog(object):
             elif self.command_type == Jog.COMMAND_UNDEFINED:
                 targ = self.test_dir()
             elif self.command_type == Jog.COMMAND_WAYPOINT:
-                # TODO
+                # TODO les self.dir doivent cracher v,theta, et pas la direction uniquement.
                 pass
             with open("logtheta.txt", "a") as logfile:
                 logfile.write(" ".join([str(time.time()), str(targ[1]), str(self.theta)]))
@@ -144,8 +143,7 @@ class Jog(object):
                     vi = copysign(Jog.ROTATION_WHEEL_SPEED, delta_ori)
                     return [vi, -vi]
                 else:
-                    self.I_error_ori += delta_ori
-                    dv = abs(targ[0]) * (Jog.KP_ORI * delta_ori + Jog.KD_ORI * d_theta)  # + Jog.KI_ORI * self.I_error_ori)
+                    dv = abs(targ[0]) * (Jog.KP_ORI * delta_ori + Jog.KD_ORI * d_theta)
                     return [targ[0] + dv, targ[0] - dv]
             else:
                 return [0, 0]

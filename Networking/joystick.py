@@ -54,6 +54,7 @@ def action_joystick_axe(axe, valeur):
             joystick_NS = 1
         elif J_INTERVAL_0NS[0] <= valeur <= J_INTERVAL_0NS[1]:
             joystick_NS = 0
+
     if joystick_NS != 0 or joystick_WE != 0 or last_order != 0:
         if joystick_NS == 0 and joystick_WE == 0:
             last_order = 0
