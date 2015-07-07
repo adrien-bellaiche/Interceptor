@@ -12,6 +12,8 @@ def go_go(gadgeto_jog):
                 gadgeto_jog.target = [- Jog.NORMAL_SPEED, 0]
             elif msg[1] == "-1":
                 gadgeto_jog.target = [Jog.NORMAL_SPEED, 0]
+            elif msg[1] == "0":
+                gadgeto_jog.target = [0, 0]
         elif msg[0] == "1":
             if msg[1] == "0":
                 gadgeto_jog.target = [Jog.NORMAL_SPEED, 90]
@@ -43,6 +45,6 @@ if __name__ == "__main__":
 
     robot = Jog(0, 0, 0, DT)
     robot.set_command_mode(Jog.COMMAND_MANUAL)
-    robot._target = [0, 0]  # [speed, orientation (repere du robot)]
+    robot.target = [0, 0]  # [speed, orientation (repere du robot)]
     robot.start()
     go_go(robot)

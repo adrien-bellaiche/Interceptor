@@ -105,7 +105,7 @@ class Jog(object):
         :return: None
         """
         if self.command_type == Jog.COMMAND_MANUAL:
-            self._target = [p[0], (p[1] + pi / 180 * self.theta) % 2 * pi]  # Correspond à [V, theta] repère global
+            self._target = [p[0], (p[1] * pi / 180 + self.theta) % (2 * pi)]  # Correspond à [V, theta] repère global
         else:
             self._target = p
         self.target_reset = False
@@ -118,7 +118,6 @@ class Jog(object):
         return self.target
 
     def order(self, last_theta):
-        p = [0, 0]
         if self._target is not None:
             # Détermination de la direction à prendre
             # TODO : les self.dir doivent cracher v,theta, et pas la direction uniquement.
@@ -140,16 +139,18 @@ class Jog(object):
                 logfile.write("\n")
             delta_ori = ((targ[1] - self.theta + pi) % (2 * pi)) - pi
             d_theta = ((self.theta - last_theta + pi) % (2 * pi)) - pi
-            if abs(delta_ori) > Jog.THRESH_ORI:  # Besoin de tourner pour s'aligner à peu près
-                vi = copysign(Jog.ROTATION_WHEEL_SPEED, delta_ori)
-                p = [vi, -vi]
+            if targ[0] != 0:
+                if abs(delta_ori) > Jog.THRESH_ORI:  # Besoin de tourner pour s'aligner à peu près
+                    vi = copysign(Jog.ROTATION_WHEEL_SPEED, delta_ori)
+                    return [vi, -vi]
+                else:
+                    self.I_error_ori += delta_ori
+                    dv = abs(targ[0]) * (Jog.KP_ORI * delta_ori + Jog.KD_ORI * d_theta)  # + Jog.KI_ORI * self.I_error_ori)
+                    return [targ[0] + dv, targ[0] - dv]
             else:
-                self.I_error_ori += delta_ori
-                dv = targ[0] * (Jog.KP_ORI * delta_ori + Jog.KD_ORI * d_theta + Jog.KI_ORI * self.I_error_ori)
-                p = [targ[0] + dv, targ[0] - dv]
+                return [0, 0]
         else:
-            p = [0, 0]
-        return p
+            return [0, 0]
 
     def asserv_speed(self, targ_speed):
         self.I_error_speed = list_add(list_dif(targ_speed, self.motor_speeds), self.I_error_speed)
@@ -245,7 +246,7 @@ class Jog(object):
 
     @staticmethod
     def test_dir():
-        return [0.3, 0]
+        return [- 0.3, 0]
 
     @staticmethod
     def dtheta(v1, v2):

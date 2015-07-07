@@ -20,6 +20,7 @@ server = "127.0.0.1"
 port = 55142
 mysock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 mysock.bind((server, port))
+last_order = 1
 
 
 def initialisation():
@@ -38,7 +39,7 @@ def initialisation():
 
 
 def action_joystick_axe(axe, valeur):
-    global joystick_WE, joystick_NS, client
+    global joystick_WE, joystick_NS, client, last_order
     if axe == J_AXIS_WE:
         if J_INTERVAL_W[0] <= valeur <= J_INTERVAL_W[1]:
             joystick_WE = -1
@@ -53,7 +54,11 @@ def action_joystick_axe(axe, valeur):
             joystick_NS = 1
         elif J_INTERVAL_0NS[0] <= valeur <= J_INTERVAL_0NS[1]:
             joystick_NS = 0
-    if joystick_NS != 0 or joystick_WE != 0:
+    if joystick_NS != 0 or joystick_WE != 0 or last_order != 0:
+        if joystick_NS == 0 and joystick_WE == 0:
+            last_order = 0
+        else:
+            last_order = 1
         print str(joystick_WE) + ',' + str(joystick_NS) + '\n'
         mysock.sendto('CONS' + str(joystick_WE) + ',' + str(joystick_NS), client)
 
