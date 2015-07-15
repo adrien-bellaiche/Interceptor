@@ -29,9 +29,9 @@ class Jog(object):
     KP_ORI = 1/THRESH_ORI
     KD_ORI = - 2*KP_ORI
     KI_ORI = KP_ORI / 40
-    KP_SPEED = 20
-    KD_SPEED = - 20
-    KI_SPEED = 90
+    KP_SPEED = 90
+    KD_SPEED = - 30
+    KI_SPEED = 50
 
     def __init__(self, x, y, user, dt):
         self.target_reset = False
@@ -83,7 +83,7 @@ class Jog(object):
         last_theta = self.theta
         # Update state
         if self.update_state() == 0:
-            #self.asserv_speed(self.test_order())
+            #self.asserv_speed(self.test_order()) # To test loop control.
             self.asserv_speed(self.order(last_theta))
 
     def set_command_mode(self, mode):
@@ -114,16 +114,12 @@ class Jog(object):
     def test_order():
         return [Jog.NORMAL_SPEED, Jog.NORMAL_SPEED]
 
-    def manual_dir(self):
-        return self.target
-
     def order(self, last_theta):
         if self._target is not None:
             # Détermination de la direction à prendre
             targ = None
             if self.command_type == Jog.COMMAND_DIRECTION:
-                # TODO les self.dir doivent cracher v,theta, et pas la direction uniquement.
-                pass
+                targ = self.manual_dir()
             elif self.command_type == Jog.COMMAND_TARGET:
                 targ = self.determine_dir()
             elif self.command_type == Jog.COMMAND_MANUAL:
@@ -131,8 +127,7 @@ class Jog(object):
             elif self.command_type == Jog.COMMAND_UNDEFINED:
                 targ = self.test_dir()
             elif self.command_type == Jog.COMMAND_WAYPOINT:
-                # TODO les self.dir doivent cracher v,theta, et pas la direction uniquement.
-                pass
+                targ = self.waypoint_dir()
             with open("logtheta.txt", "a") as logfile:
                 logfile.write(" ".join([str(time.time()), str(targ[1]), str(self.theta)]))
                 logfile.write("\n")
@@ -245,6 +240,12 @@ class Jog(object):
     @staticmethod
     def test_dir():
         return [- 0.3, 0]
+
+    def manual_dir(self):
+        return self.target
+
+    def waypoint_dir(self):
+        return [Jog.NORMAL_SPEED, atan2(self.target[1]-self.position[1], self.target[0]-self.position[0])]
 
     @staticmethod
     def dtheta(v1, v2):

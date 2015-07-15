@@ -64,7 +64,7 @@ def retrieve_data():
         if msg[8][0] != 'V' and e_codes[6] == 0:
             e_codes[7], target[3] = parse_position(msg[8])
         if e_codes[6] == 0:
-            robot.update_target(target)
+            robot.target = target
     elif msg[0] == "S":
         started = True
     elif msg[0] == "F":
